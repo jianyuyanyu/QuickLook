@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using MediaInfo;
+extern alias MediaInfoWrapper;
+
+using MediaInfoWrapper::MediaInfo;
 using QuickLook.Common.Plugin;
 using System;
 using System.IO;
@@ -26,7 +28,7 @@ namespace QuickLook.Plugin.VideoViewer;
 
 public class Plugin : IViewer
 {
-    private static MediaInfo.MediaInfo _mediaInfo;
+    private static MediaInfoLib _mediaInfo;
 
     private ViewerPanel _vp;
 
@@ -34,7 +36,7 @@ public class Plugin : IViewer
 
     static Plugin()
     {
-        _mediaInfo = new MediaInfo.MediaInfo(Path.Combine(
+        _mediaInfo = new MediaInfoLib(Path.Combine(
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
             Environment.Is64BitProcess ? "MediaInfo-x64\\" : "MediaInfo-x86\\"));
         _mediaInfo.Option("Cover_Data", "base64");
