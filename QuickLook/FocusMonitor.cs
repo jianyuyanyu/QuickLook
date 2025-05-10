@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -62,6 +62,6 @@ internal class FocusMonitor
 
     internal static FocusMonitor GetInstance()
     {
-        return _instance ?? (_instance = new FocusMonitor());
+        return _instance ??= new FocusMonitor();
     }
 }

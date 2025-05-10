@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -64,6 +64,18 @@ public partial class ViewerWindow : INotifyPropertyChanged
         {
             case nameof(ContextObject.Theme):
                 SwitchTheme(ContextObject.Theme);
+                break;
+
+            case nameof(ContextObject.Title):
+                if (!string.IsNullOrWhiteSpace(ContextObject.Title))
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        ShowInTaskbar = true;
+                        Title = $"QuickLook - {ContextObject.Title}";
+                        ShowInTaskbar = false;
+                    }));
+                }
                 break;
 
             default:

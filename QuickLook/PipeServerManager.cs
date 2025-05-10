@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -170,6 +170,6 @@ internal class PipeServerManager : IDisposable
 
     public static PipeServerManager GetInstance()
     {
-        return _instance ?? (_instance = new PipeServerManager());
+        return _instance ??= new PipeServerManager();
     }
 }

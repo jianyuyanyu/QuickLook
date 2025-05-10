@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 // 
 // This file is part of QuickLook program.
 // 
@@ -27,18 +27,18 @@
 EXPORT void Init()
 {
 #ifdef WIN64
-	WoW64HookHelper::Launch();
+    WoW64HookHelper::Launch();
 #endif
-	DOpus::PrepareMessageWindow();
+    DOpus::PrepareMessageWindow();
     MultiCommander::PrepareMessageWindow();
 }
 
 EXPORT Shell32::FocusedWindowType GetFocusedWindowType()
 {
-	return Shell32::GetFocusedWindowType();
+    return Shell32::GetFocusedWindowType();
 }
 
 EXPORT void GetCurrentSelection(PWCHAR buffer)
 {
-	Shell32::GetCurrentSelection(buffer);
+    Shell32::GetCurrentSelection(buffer);
 }

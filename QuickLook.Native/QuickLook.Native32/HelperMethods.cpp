@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 // 
 // This file is part of QuickLook program.
 // 
@@ -16,118 +16,167 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
+#include "strsafe.h"
+
 #include "HelperMethods.h"
 
 void HelperMethods::GetSelectedInternal(CComPtr<IShellBrowser> psb, PWCHAR buffer)
 {
-	CComPtr<IShellView> psv;
-	if (FAILED(psb->QueryActiveShellView(&psv)))
-		return;
+    CComPtr<IShellView> psv;
+    if (FAILED(psb->QueryActiveShellView(&psv)))
+        return;
 
-	CComPtr<IDataObject> dao;
-	if (FAILED(psv->GetItemObject(SVGIO_SELECTION, IID_IDataObject, reinterpret_cast<void**>(&dao))))
-		return;
+    CComPtr<IDataObject> dao;
+    if (FAILED(psv->GetItemObject(SVGIO_SELECTION, IID_IDataObject, reinterpret_cast<void**>(&dao))))
+        return;
 
-	return ObtainFirstItem(dao, buffer);
+    return ObtainFirstItem(dao, buffer);
 }
 
 void HelperMethods::ObtainFirstItem(CComPtr<IDataObject> dao, PWCHAR buffer)
 {
-	FORMATETC formatetc;
-	STGMEDIUM medium = {sizeof medium};
+    if (!dao || !buffer)
+        return;
 
-	formatetc.cfFormat = CF_HDROP;
-	formatetc.ptd = nullptr;
-	formatetc.dwAspect = DVASPECT_CONTENT;
-	formatetc.lindex = -1;
-	formatetc.tymed = TYMED_HGLOBAL;
+    FORMATETC formatetc = {};
+    STGMEDIUM medium = {};
 
-	medium.tymed = TYMED_HGLOBAL;
+    formatetc.cfFormat = CF_HDROP;
+    formatetc.ptd = nullptr;
+    formatetc.dwAspect = DVASPECT_CONTENT;
+    formatetc.lindex = -1;
+    formatetc.tymed = TYMED_HGLOBAL;
 
-	if (FAILED(dao->GetData(&formatetc, &medium)))
-		return;
+    medium.tymed = TYMED_HGLOBAL;
 
-	int n = DragQueryFile(HDROP(medium.hGlobal), 0xFFFFFFFF, nullptr, 0);
+    // Try CF_HDROP first
+    if (SUCCEEDED(dao->GetData(&formatetc, &medium)))
+    {
+        HDROP hDrop = HDROP(medium.hGlobal);
+        int count = DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
+        if (count >= 1)
+        {
+            WCHAR localBuffer[MAX_PATH] = { '\0' };
+            if (DragQueryFileW(hDrop, 0, localBuffer, MAX_PATH) > 0)
+            {
+                GetLongPathName(localBuffer, buffer, MAX_PATH_EX);
+                ReleaseStgMedium(&medium);
+                return;
+            }
+            ReleaseStgMedium(&medium);
+        }
+    }
 
-	if (n < 1)
-		return;
+    // If CF_HDROP fails, try CFSTR_SHELLIDLIST
+    // Support Desktop Icons (This PC, Recycle Bin and so on)
+    // https://github.com/QL-Win/QuickLook/issues/1610
+    static const CLIPFORMAT cfShellIDList = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+    formatetc.cfFormat = cfShellIDList;
 
-	WCHAR localBuffer[MAX_PATH] = { '\0' };
-	DragQueryFile(HDROP(medium.hGlobal), 0, localBuffer, MAX_PATH);
-	
-	GetLongPathName(localBuffer, buffer, MAX_PATH_EX);
+    if (SUCCEEDED(dao->GetData(&formatetc, &medium))) 
+    {
+        CIDA* pida = (CIDA*)GlobalLock(medium.hGlobal);
+        if (!pida)
+        {
+            ReleaseStgMedium(&medium);
+            return;
+        }
+
+        ITEMIDLIST* pidlFolder = (ITEMIDLIST*)((BYTE*)pida + pida->aoffset[0]);
+        ITEMIDLIST* pidlItem = (ITEMIDLIST*)((BYTE*)pida + pida->aoffset[1]);
+        PIDLIST_ABSOLUTE pidlFull = ILCombine(pidlFolder, pidlItem);
+        GlobalUnlock(medium.hGlobal);
+        ReleaseStgMedium(&medium);
+
+        if (!pidlFull)
+            return;
+
+        // Convert to IShellItem to get canonical parsing path
+        CComPtr<IShellItem> shellItem;
+        if (SUCCEEDED(SHCreateItemFromIDList(pidlFull, IID_PPV_ARGS(&shellItem))))
+        {
+            PWSTR pszPath = nullptr;
+            if (SUCCEEDED(shellItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszPath)))
+            {
+                StringCchCopyW(buffer, MAX_PATH, pszPath); // returns e.g., ::{645FF040-5081-101B-9F08-00AA002F954E}
+                CoTaskMemFree(pszPath);
+            }
+        }
+
+        ILFree(pidlFull);
+    }
 }
 
 bool HelperMethods::IsListaryToolbarVisible()
 {
-	auto CALLBACK findListaryWindowProc = [](__in HWND hwnd, __in LPARAM lParam)-> BOOL
-	{
-		WCHAR classBuffer[MAX_PATH] = {'\0'};
-		if (FAILED(GetClassName(hwnd, classBuffer, MAX_PATH)))
-			return TRUE;
+    auto CALLBACK findListaryWindowProc = [](__in HWND hwnd, __in LPARAM lParam)-> BOOL
+    {
+        WCHAR classBuffer[MAX_PATH] = {'\0'};
+        if (FAILED(GetClassName(hwnd, classBuffer, MAX_PATH)))
+            return TRUE;
 
-		if (wcsncmp(classBuffer, L"Listary_WidgetWin_", 18) == 0)
-		{
-			if (IsWindowVisible(hwnd))
-			{
-				*reinterpret_cast<bool*>(lParam) = true;
-				return FALSE;
-			}
-		}
-		return TRUE;
-	};
+        if (wcsncmp(classBuffer, L"Listary_WidgetWin_", 18) == 0)
+        {
+            if (IsWindowVisible(hwnd))
+            {
+                *reinterpret_cast<bool*>(lParam) = true;
+                return FALSE;
+            }
+        }
+        return TRUE;
+    };
 
-	auto found = false;
-	EnumWindows(findListaryWindowProc, reinterpret_cast<LPARAM>(&found));
+    auto found = false;
+    EnumWindows(findListaryWindowProc, reinterpret_cast<LPARAM>(&found));
 
-	return found;
+    return found;
 }
 
 // Windows 10 1909 replaced the search box in the File Explorer by a UWP control.
 // gti.flags is always 0 for UWP applications.
 bool HelperMethods::IsExplorerSearchBoxFocused()
 {
-	auto* hwnd = GetFocusedControl();
+    auto* hwnd = GetFocusedControl();
 
-	WCHAR classBuffer[MAX_PATH] = { '\0' };
-	if (FAILED(GetClassName(hwnd, classBuffer, MAX_PATH)))
-		return false;
+    WCHAR classBuffer[MAX_PATH] = { '\0' };
+    if (FAILED(GetClassName(hwnd, classBuffer, MAX_PATH)))
+        return false;
 
-	return wcscmp(classBuffer, L"Windows.UI.Core.CoreWindow") == 0;
+    return wcscmp(classBuffer, L"Windows.UI.Core.CoreWindow") == 0;
 }
 
 bool HelperMethods::IsCursorActivated(HWND hwnd)
 {
-	auto tId = GetWindowThreadProcessId(hwnd, nullptr);
+    auto tId = GetWindowThreadProcessId(hwnd, nullptr);
 
-	GUITHREADINFO gti = { sizeof gti };
-	GetGUIThreadInfo(tId, &gti);
+    GUITHREADINFO gti = { sizeof gti };
+    GetGUIThreadInfo(tId, &gti);
 
-	return gti.flags || gti.hwndCaret || IsListaryToolbarVisible();
+    return gti.flags || gti.hwndCaret || IsListaryToolbarVisible();
 }
 
 bool HelperMethods::IsUWP()
 {
-	auto pGCPFN = decltype(&GetCurrentPackageFullName)(
-		GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetCurrentPackageFullName"));
+    auto pGCPFN = decltype(&GetCurrentPackageFullName)(
+        GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetCurrentPackageFullName"));
 
-	if (!pGCPFN)
-		return false;
+    if (!pGCPFN)
+        return false;
 
-	UINT32 pn = 0;
-	return pGCPFN(&pn, nullptr) == ERROR_INSUFFICIENT_BUFFER;
+    UINT32 pn = 0;
+    return pGCPFN(&pn, nullptr) == ERROR_INSUFFICIENT_BUFFER;
 }
 
 HWND HelperMethods::GetFocusedControl()
 {
-	auto tid = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
+    auto tid = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
 
-   	if (0 == AttachThreadInput(GetCurrentThreadId(), tid, TRUE))
-		return nullptr;
+       if (0 == AttachThreadInput(GetCurrentThreadId(), tid, TRUE))
+        return nullptr;
 
-	auto* hwnd = GetFocus();
+    auto* hwnd = GetFocus();
 
- 	AttachThreadInput(GetCurrentThreadId(), tid, FALSE);
+     AttachThreadInput(GetCurrentThreadId(), tid, FALSE);
 
-	return hwnd;
+    return hwnd;
 }
