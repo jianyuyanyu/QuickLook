@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -73,7 +73,7 @@ public partial class InfoPanel : UserControl
 
         Stop = false;
 
-        Task.Run(() =>
+        _ = Task.Run(() =>
         {
             if (File.Exists(path))
             {
@@ -83,10 +83,7 @@ public partial class InfoPanel : UserControl
             }
             else if (Path.GetPathRoot(path) == path) // is this a drive?
             {
-                long totalSpace;
-                long totalFreeSpace;
-
-                FileHelper.GetDriveSpace(path, out totalSpace, out totalFreeSpace);
+                FileHelper.GetDriveSpace(path, out var totalSpace, out var totalFreeSpace);
 
                 Dispatcher.Invoke(() =>
                 {

@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -49,6 +49,20 @@ public class Plugin : IViewer
 
         _hlmLight = GetHighlightingManager(Themes.Light, "Light");
         _hlmDark = GetHighlightingManager(Themes.Dark, "Dark");
+
+        // Implementation of the Search Panel Styled with Fluent Theme
+        {
+            var groupDictionary = new ResourceDictionary();
+            groupDictionary.MergedDictionaries.Add(new ResourceDictionary()
+            {
+                Source = new Uri("pack://application:,,,/QuickLook.Plugin.TextViewer;component/Controls/DropDownButton.xaml", UriKind.Absolute)
+            });
+            groupDictionary.MergedDictionaries.Add(new ResourceDictionary()
+            {
+                Source = new Uri("pack://application:,,,/QuickLook.Plugin.TextViewer;component/Controls/SearchPanel.xaml", UriKind.Absolute)
+            });
+            Application.Current.Resources.MergedDictionaries.Add(groupDictionary);
+        }
     }
 
     public bool CanHandle(string path)

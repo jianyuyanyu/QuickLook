@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 // 
 // This file is part of QuickLook program.
 // 
@@ -19,13 +19,13 @@
 class HelperMethods
 {
 public:
-	static void GetSelectedInternal(CComPtr<IShellBrowser> psb, PWCHAR buffer);
-	static void ObtainFirstItem(CComPtr<IDataObject> dao, PWCHAR buffer);
-	static bool IsCursorActivated(HWND hwndfg);
-	static bool IsExplorerSearchBoxFocused();
-	static bool HelperMethods::IsUWP();
+    static void GetSelectedInternal(CComPtr<IShellBrowser> psb, PWCHAR buffer);
+    static void ObtainFirstItem(CComPtr<IDataObject> dao, PWCHAR buffer);
+    static bool IsCursorActivated(HWND hwndfg);
+    static bool IsExplorerSearchBoxFocused();
+    static bool HelperMethods::IsUWP();
 
 private:
-	static bool IsListaryToolbarVisible();
-	static HWND GetFocusedControl();
+    static bool IsListaryToolbarVisible();
+    static HWND GetFocusedControl();
 };

@@ -1,4 +1,4 @@
-﻿// Copyright © 2018 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -55,7 +55,7 @@ public partial class PdfViewerControl : UserControl, INotifyPropertyChanged, IDi
         pagePanel.ImageScrolled += NavigatePage;
     }
 
-    public ObservableCollection<int> PageThumbnails { get; set; } = new ObservableCollection<int>();
+    public ObservableCollection<int> PageThumbnails { get; set; } = [];
 
     public int TotalPages => PdfDocumentWrapper.PdfDocument.PageCount;
 
