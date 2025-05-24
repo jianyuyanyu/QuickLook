@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -64,6 +64,18 @@ public partial class ViewerWindow : INotifyPropertyChanged
         {
             case nameof(ContextObject.Theme):
                 SwitchTheme(ContextObject.Theme);
+                break;
+
+            case nameof(ContextObject.Title):
+                if (!string.IsNullOrWhiteSpace(ContextObject.Title))
+                {
+                    Dispatcher?.Invoke(() =>
+                    {
+                        // We can not update the Title when ShowInTaskbar is false
+                        // https://github.com/QL-Win/QuickLook/issues/1628
+                        Title = $"QuickLook - {ContextObject.Title}";
+                    });
+                }
                 break;
 
             default:
