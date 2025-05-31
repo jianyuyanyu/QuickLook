@@ -1,3 +1,5 @@
+﻿// Copyright © 2017-2025 QL-Win Contributors
+// 
 // This file is part of QuickLook program.
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -27,9 +29,9 @@ void MultiCommander::GetSelected(PWCHAR buffer)
     }
 
     COPYDATASTRUCT cds;
-	cds.dwData = MULTICMD_CPF_GETCURITEMFULL | MULTICMD_CPF_SOURCE;
-	cds.cbData = 0;
-	cds.lpData = nullptr;
+    cds.dwData = MULTICMD_CPF_GETCURITEMFULL | MULTICMD_CPF_SOURCE;
+    cds.cbData = 0;
+    cds.lpData = nullptr;
 
     ResetEvent(hGetResultEvent);
 
@@ -37,12 +39,12 @@ void MultiCommander::GetSelected(PWCHAR buffer)
                    FindWindow(MULTICMD_CLASS, nullptr),
                    WM_COPYDATA,
                    reinterpret_cast<WPARAM>(hMsgWnd),
-		           reinterpret_cast<LPARAM>(&cds)
+                   reinterpret_cast<LPARAM>(&cds)
                );
 
-	if (!ret || WAIT_OBJECT_0 != WaitForSingleObject(hGetResultEvent, 2000)) {
+    if (!ret || WAIT_OBJECT_0 != WaitForSingleObject(hGetResultEvent, 2000)) {
         return;
-	}
+    }
 
     auto path = reinterpret_cast<PWCHAR>(pCurrentItemPath);
     wcscpy_s(buffer, wcslen(path) + 1, path);
@@ -78,21 +80,21 @@ bool MultiCommander::PrepareMessageWindow()
 LRESULT CALLBACK MultiCommander::msgWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
-	{
-		case WM_COPYDATA:
-		{
+    {
+        case WM_COPYDATA:
+        {
             delete[] pCurrentItemPath;
 
-			auto cds = reinterpret_cast<PCOPYDATASTRUCT>(lParam);
-			auto buf = static_cast<PCHAR>(cds->lpData);
+            auto cds = reinterpret_cast<PCOPYDATASTRUCT>(lParam);
+            auto buf = static_cast<PCHAR>(cds->lpData);
 
-			pCurrentItemPath = new CHAR[cds->cbData + 1]{ '\0' };
-			memcpy(pCurrentItemPath, buf, cds->cbData);
+            pCurrentItemPath = new CHAR[cds->cbData + 1]{ '\0' };
+            memcpy(pCurrentItemPath, buf, cds->cbData);
 
             SetEvent(hGetResultEvent);
             return 0;
-		}
-		default:
+        }
+        default:
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
-	}
+    }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -23,6 +23,15 @@ namespace QuickLook.Controls;
 
 public class WebClientEx : WebClient
 {
+    static WebClientEx()
+    {
+#if NETFRAMEWORK
+        // Fix issue #1577
+        // System.Net.WebException: 'The request was aborted: Could not create SSL/TLS secure channel.'
+        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+#endif
+    }
+
     public WebClientEx() : this(60 * 1000)
     {
     }

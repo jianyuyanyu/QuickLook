@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -83,7 +83,7 @@ internal static class QuickLook
 
     internal static string GetCurrentSelection()
     {
-        StringBuilder sb = new StringBuilder(MaxPath);
+        StringBuilder sb = new(MaxPath);
         // communicate with COM in a separate STA thread
         var thread = new Thread(() =>
         {
@@ -102,12 +102,13 @@ internal static class QuickLook
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
         thread.Join();
-        if (sb.Length > 2 && sb[0].Equals('"') && sb[sb.Length - 1].Equals('"'))
+        if (sb.Length > 2 && sb[0] == '"' && sb[sb.Length - 1] == '"')
         {
             // We got a quoted string which breaks ResolveShortcut
-            sb = sb.Replace("\"", string.Empty, 0, 1).Replace("\"", string.Empty, sb.Length - 1, 1);
+            sb.Remove(sb.Length - 1, 1); // remove last "
+            sb.Remove(0, 1);             // remove first "
         }
-        return ResolveShortcut(sb?.ToString() ?? String.Empty);
+        return ResolveShortcut(sb?.ToString() ?? string.Empty);
     }
 
     private static string ResolveShortcut(string path)

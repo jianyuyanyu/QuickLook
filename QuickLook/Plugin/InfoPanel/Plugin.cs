@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -39,7 +39,7 @@ public class Plugin : IViewer
     {
         context.PreferredSize = new Size { Width = 453, Height = 172 };
 
-        context.Title = "";
+        context.Title = string.Empty;
         context.TitlebarOverlap = false;
         context.TitlebarBlurVisibility = false;
         context.TitlebarColourVisibility = false;

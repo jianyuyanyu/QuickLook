@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -15,8 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using SharpCompress.Common;
-using SharpCompress.Readers;
+using PureSharpCompress.Common;
+using PureSharpCompress.Readers;
 using System;
 using System.Text;
 using UtfUnknown;

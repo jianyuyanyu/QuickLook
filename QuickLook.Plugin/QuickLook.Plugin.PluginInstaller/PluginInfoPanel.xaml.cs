@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -36,9 +36,6 @@ public partial class PluginInfoPanel : UserControl
     public PluginInfoPanel(string path, ContextObject context)
     {
         InitializeComponent();
-
-        // apply global theme
-        Resources.MergedDictionaries[0].Clear();
 
         _path = path;
         _context = context;

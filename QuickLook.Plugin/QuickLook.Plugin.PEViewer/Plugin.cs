@@ -1,4 +1,4 @@
-﻿// Copyright © 2024 ema
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -25,13 +25,12 @@ namespace QuickLook.Plugin.PEViewer;
 
 public class Plugin : IViewer
 {
-    private static readonly string[] Extensions =
+    private static readonly string[] _extensions =
     [
         ".exe", ".sys", ".scr", ".ocx", ".cpl",  ".bpl",
         ".dll", ".ax", ".drv", ".vxd",
         ".mui", ".mun",
         ".tlb",
-        ".msi",
         ".efi", ".mz",
     ];
 
@@ -46,7 +45,7 @@ public class Plugin : IViewer
 
     public bool CanHandle(string path)
     {
-        return !Directory.Exists(path) && Extensions.Any(path.ToLower().EndsWith);
+        return !Directory.Exists(path) && _extensions.Any(path.ToLower().EndsWith);
     }
 
     public void Prepare(string path, ContextObject context)
@@ -63,7 +62,6 @@ public class Plugin : IViewer
         _ip.Tag = context;
 
         context.ViewerContent = _ip;
-        context.Title = $"{Path.GetFileName(path)}";
         context.IsBusy = false;
     }
 

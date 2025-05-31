@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 // 
 // This file is part of QuickLook program.
 // 
@@ -22,21 +22,21 @@
 class Shell32
 {
 public:
-	enum FocusedWindowType
-	{
-		INVALID,
-		DESKTOP,
-		EXPLORER,
-		DIALOG,
-		EVERYTHING,
-		DOPUS,
+    enum FocusedWindowType
+    {
+        INVALID,
+        DESKTOP,
+        EXPLORER,
+        DIALOG,
+        EVERYTHING,
+        DOPUS,
         MULTICOMMANDER,
-	};
+    };
 
-	static FocusedWindowType GetFocusedWindowType();
-	static void GetCurrentSelection(PWCHAR buffer);
+    static FocusedWindowType GetFocusedWindowType();
+    static void GetCurrentSelection(PWCHAR buffer);
 
 private:
-	static void getSelectedFromDesktop(PWCHAR buffer);
-	static void getSelectedFromExplorer(PWCHAR buffer);
+    static void getSelectedFromDesktop(PWCHAR buffer);
+    static void getSelectedFromExplorer(PWCHAR buffer);
 };

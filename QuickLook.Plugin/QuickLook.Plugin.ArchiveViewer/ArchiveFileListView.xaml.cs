@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -20,9 +20,6 @@ using System.Windows.Controls;
 
 namespace QuickLook.Plugin.ArchiveViewer;
 
-/// <summary>
-///     Interaction logic for ArchiveFileListView.xaml
-/// </summary>
 public partial class ArchiveFileListView : UserControl, IDisposable
 {
     public ArchiveFileListView()

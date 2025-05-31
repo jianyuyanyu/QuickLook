@@ -1,4 +1,4 @@
-﻿// Copyright © 2024 QL-Win Contributors
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -21,7 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using ImageMagick;
 using QuickLook.Common.Helpers;
 using QuickLook.Common.Plugin;
 using QuickLook.Plugin.ImageViewer.AnimatedImage.Providers;
@@ -46,7 +45,7 @@ public class Plugin : IViewer
         ".mdc", ".mef", ".mos", ".mrw",
         ".nef", ".nrw",
         ".obm", ".orf",
-        ".pbm", ".pef", ".pgm", ".png", ".pnm", ".ppm", ".psb", ".psd", ".ptx", ".pxn",
+        ".pbm", ".pcx", ".pef", ".pgm", ".png", ".pnm", ".ppm", ".psb", ".psd", ".ptx", ".pxn",
         ".qoi",
         ".r3d", ".raf", ".raw", ".rw2", ".rwl", ".rwz",
         ".sr2", ".srf", ".srw", ".svg", ".svgz",
