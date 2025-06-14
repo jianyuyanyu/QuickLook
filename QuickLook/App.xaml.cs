@@ -1,4 +1,4 @@
-// Copyright © 2017 Paddy Xu
+// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -20,20 +20,21 @@ using QuickLook.Common.Helpers;
 using QuickLook.Helpers;
 using QuickLook.NativeMethods;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Media;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Violeta.Appearance;
 
 namespace QuickLook;
 
-/// <summary>
-///     Interaction logic for App.xaml
-/// </summary>
 public partial class App : Application
 {
     public static readonly string LocalDataPath = SettingHelper.LocalDataPath;
@@ -50,11 +51,156 @@ public partial class App : Application
     private bool _cleanExit = true;
     private Mutex _isRunning;
 
+    static App()
+    {
+        var processRenderMode = SettingHelper.Get("ProcessRenderMode", failsafe: (int)RenderMode.Default, "QuickLook");
+        if (processRenderMode == (int)RenderMode.SoftwareOnly)
+        {
+            RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+        }
+
+        // Explicitly set to PerMonitor to avoid being overridden by the system
+        if (SHCore.SetProcessDpiAwareness(SHCore.PROCESS_DPI_AWARENESS.PROCESS_PER_MONITOR_DPI_AWARE) is uint result)
+        {
+            Debug.WriteLine(
+                result == 0 ?
+                "DPI Awareness applied successfully" :
+                $"DPI Awareness manual setup failed. Error Code: {result}"
+            );
+        }
+
+        // Occurs when the resolution of an assembly fails
+        AppDomain.CurrentDomain.AssemblyResolve += (_, e) =>
+        {
+            // Ignore the resource fails
+            // e.g. "QuickLook.resources, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
+            if (e.Name.Contains(".resources,"))
+            {
+                return null;
+            }
+
+            try
+            {
+                // Manually resolve the assembly fails
+                // https://github.com/QL-Win/QuickLook/issues/1618
+                // e.g. "System.Memory, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
+                if (e.Name.Split(',').FirstOrDefault() is string assemblyName)
+                {
+                    foreach (var libPath in FetchFiles(AppDomain.CurrentDomain.BaseDirectory, assemblyName + ".dll"))
+                    {
+                        return Assembly.LoadFrom(libPath);
+                    }
+                }
+            }
+            catch
+            {
+                // There is no way to resolve it
+            }
+
+            return null;
+
+            static IEnumerable<string> FetchFiles(string rootPath, string targetFileName)
+            {
+                foreach (var file in Directory.GetFiles(rootPath, "*" + Path.GetExtension(targetFileName), SearchOption.AllDirectories))
+                {
+                    if (string.Equals(Path.GetFileName(file), targetFileName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        yield return file;
+                    }
+                }
+            }
+        };
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
-        AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+        // Exception handling events which are not caught in the Task thread
+        TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            ProcessHelper.WriteLog(((Exception)args.ExceptionObject).ToString());
+            try
+            {
+                ProcessHelper.WriteLog(e.Exception.ToString());
+                Current?.Dispatcher?.BeginInvoke(() =>
+                {
+                    Wpf.Ui.Violeta.Controls.ExceptionReport.Show(e.Exception);
+                });
+            }
+            catch (Exception ex)
+            {
+                ProcessHelper.WriteLog(ex.ToString());
+            }
+            finally
+            {
+                e.SetObserved();
+            }
+        };
+
+        // Exception handling events which are not caught in UI thread
+        DispatcherUnhandledException += (_, e) =>
+        {
+            // https://learn.microsoft.com/en-us/troubleshoot/developer/dotnet/framework/general/wpf-render-thread-failures
+            if (e.Exception.Message.StartsWith("UCEERR_RENDERTHREADFAILURE")
+             && e.Exception.Message.Contains("0x88980406"))
+            {
+                ProcessHelper.WriteLog(e.Exception.ToString());
+
+                var result = System.Windows.Forms.MessageBox.Show(
+                    $"{e.Exception.Message} most often due to a lack of graphics resources or hardware/driver limitations in allocating a sufficiently large texture.\nAre you want to fall back to use software render only?",
+                    "Fatal",
+                    System.Windows.Forms.MessageBoxButtons.YesNo,
+                    System.Windows.Forms.MessageBoxIcon.Error
+                );
+
+                if (result == System.Windows.Forms.DialogResult.Yes)
+                {
+                    SettingHelper.Set("ProcessRenderMode", (int)RenderMode.SoftwareOnly, "QuickLook");
+                }
+
+                TrayIconManager.GetInstance().Restart(forced: true);
+                return;
+            }
+
+            try
+            {
+                ProcessHelper.WriteLog(e.Exception.ToString());
+                Current?.Dispatcher?.BeginInvoke(() =>
+                {
+                    Wpf.Ui.Violeta.Controls.ExceptionReport.Show(e.Exception);
+                });
+            }
+            catch (Exception ex)
+            {
+                ProcessHelper.WriteLog(ex.ToString());
+            }
+            finally
+            {
+                e.Handled = true;
+            }
+        };
+
+        // Exception handling events which are not caught in Non-UI thread
+        // Such as a child thread created by ourself
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            try
+            {
+                if (e.ExceptionObject is Exception ex)
+                {
+                    ProcessHelper.WriteLog(ex.ToString());
+                    Current?.Dispatcher?.BeginInvoke(() =>
+                    {
+                        Wpf.Ui.Violeta.Controls.ExceptionReport.Show(ex);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                ProcessHelper.WriteLog(ex.ToString());
+            }
+            finally
+            {
+                // Ignore
+            }
         };
 
         // Initialize MessageBox patching
@@ -133,7 +279,7 @@ public partial class App : Application
     {
         TrayIconManager.GetInstance();
         if (!e.Args.Contains("/autorun") && !IsUWP)
-            TrayIconManager.ShowNotification("", TranslationHelper.Get("APP_START"));
+            TrayIconManager.ShowNotification(string.Empty, TranslationHelper.Get("APP_START"));
         if (e.Args.Contains("/first"))
             AutoStartupHelper.CreateAutorunShortcut();
 
@@ -168,7 +314,7 @@ public partial class App : Application
         // second instance: preview this file
         if (args.Any() && (Directory.Exists(args.First()) || File.Exists(args.First())))
         {
-            PipeServerManager.SendMessage(PipeMessages.Toggle, args.First());
+            PipeServerManager.SendMessage(PipeMessages.Toggle, args.First(), [.. args.Skip(1)]);
         }
         // second instance: duplicate
         else

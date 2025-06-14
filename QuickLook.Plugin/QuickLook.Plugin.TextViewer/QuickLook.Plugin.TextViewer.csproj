@@ -59,7 +59,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
+        <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
         <PackageReference Include="UTF.Unknown" Version="2.5.1" />
         <Reference Include="WindowsBase" />
     </ItemGroup>
@@ -73,9 +73,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Syntax\**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+        <EmbeddedResource Include="Syntax\**" />
         <None Include="Translations.config">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

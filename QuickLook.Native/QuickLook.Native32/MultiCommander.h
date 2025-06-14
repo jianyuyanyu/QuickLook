@@ -1,3 +1,5 @@
+﻿// Copyright © 2017-2025 QL-Win Contributors
+// 
 // This file is part of QuickLook program.
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -24,13 +26,13 @@
 class MultiCommander
 {
 public:
-	static void GetSelected(PWCHAR buffer);
+    static void GetSelected(PWCHAR buffer);
     static bool PrepareMessageWindow();
     MultiCommander() = delete;
 private:
     static HWND     hMsgWnd;
-	static HANDLE   hGetResultEvent;
-	static PCHAR    pCurrentItemPath;
+    static HANDLE   hGetResultEvent;
+    static PCHAR    pCurrentItemPath;
 
     static LRESULT CALLBACK msgWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

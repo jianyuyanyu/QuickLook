@@ -8,7 +8,7 @@
         xmlns:glassLayer="clr-namespace:QuickLook.Controls.GlassLayer"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         x:Name="mainWindow"
-        Title="{Binding ElementName=titleAreaText, Path=Text}"
+        Title="QuickLook"
         MinWidth="400"
         MinHeight="200"
         d:DesignHeight="700"
@@ -117,6 +117,11 @@
                             DockPanel.Dock="Right"
                             Style="{StaticResource CaptionButtonStyle}"
                             ToolTip="Open with XXX" />
+                    <Button x:Name="buttonReload"
+                            Content="&#xE72C;"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource CaptionButtonStyle}"
+                            ToolTip="Reload" />
                     <!--<Button x:Name="buttonOpen" DockPanel.Dock="Right"
                             Style="{StaticResource CaptionTextButtonStyle}"
                             Visibility="{Binding ActualWidth, ElementName=windowCaptionContainer, Converter={StaticResource WidthToVisibilityCollapsedConverter}}">
