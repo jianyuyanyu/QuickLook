@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -17,6 +17,7 @@
 
 using QuickLook.Common.Helpers;
 using QuickLook.Common.Plugin;
+using QuickLook.Helpers;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -44,7 +45,7 @@ internal class ViewWindowManager : IDisposable
 
     public void RunAndClosePreview()
     {
-        if (_viewerWindow.Visibility != Visibility.Visible)
+        if (!_viewerWindow.IsVisible)
             return;
 
         // if the current focus is in Desktop or explorer windows, just close the preview window and leave the task to System.
@@ -66,19 +67,22 @@ internal class ViewWindowManager : IDisposable
 
     public void ClosePreview()
     {
-        if (_viewerWindow.Visibility != Visibility.Visible)
+        if (!_viewerWindow.IsVisible)
             return;
 
         StopFocusMonitor();
         _viewerWindow.Close();
     }
 
-    public void TogglePreview(string path = null)
+    public void TogglePreview(string path = null, string options = null)
     {
         if (string.IsNullOrEmpty(path))
             path = NativeMethods.QuickLook.GetCurrentSelection();
 
-        if (_viewerWindow.Visibility == Visibility.Visible && (string.IsNullOrEmpty(path) || path == _invokedPath))
+        if (!string.IsNullOrEmpty(options))
+            InvokePreviewWithOption(path, options);
+        else
+            if (_viewerWindow.IsVisible && (string.IsNullOrEmpty(path) || path == _invokedPath))
             ClosePreview();
         else
             InvokePreview(path);
@@ -105,7 +109,7 @@ internal class ViewWindowManager : IDisposable
 
     public void SwitchPreview(string path = null)
     {
-        if (_viewerWindow.Visibility != Visibility.Visible)
+        if (!_viewerWindow.IsVisible)
             return;
 
         if (string.IsNullOrEmpty(path))
@@ -117,6 +121,26 @@ internal class ViewWindowManager : IDisposable
         InvokePreview(path);
     }
 
+    public void InvokePreviewWithOption(string path = null, string options = null)
+    {
+        InvokePreview(path);
+
+        if (string.IsNullOrWhiteSpace(options)) return;
+
+        var cli = new CommandLineParser(options.Split(','));
+
+        if (cli.Has("top"))
+        {
+            _viewerWindow.Topmost = true;
+            _viewerWindow.buttonTop.Tag = "Top";
+        }
+        if (cli.Has("pin"))
+        {
+            _viewerWindow.Pinned = true;
+            ForgetCurrentWindow();
+        }
+    }
+
     public void InvokePreview(string path = null)
     {
         if (string.IsNullOrEmpty(path))
@@ -125,11 +149,12 @@ internal class ViewWindowManager : IDisposable
         if (string.IsNullOrEmpty(path))
             return;
 
-        if (_viewerWindow.Visibility == Visibility.Visible && path == _invokedPath)
+        if (_viewerWindow.IsVisible && path == _invokedPath)
             return;
 
         if (!Directory.Exists(path) && !File.Exists(path))
-            return;
+            if (!path.StartsWith("::")) // CLSID
+                return;
 
         _invokedPath = path;
 
@@ -162,6 +187,16 @@ internal class ViewWindowManager : IDisposable
         {
             BeginShowNewWindow(path, matchedPlugin);
         }
+    }
+
+    public void ReloadPreview()
+    {
+        if (!_viewerWindow.IsVisible || string.IsNullOrEmpty(_invokedPath))
+            return;
+
+        var matchedPlugin = PluginManager.GetInstance().FindMatch(_invokedPath);
+
+        BeginShowNewWindow(_invokedPath, matchedPlugin);
     }
 
     private void BeginShowNewWindow(string path, IViewer matchedPlugin)
@@ -197,7 +232,7 @@ internal class ViewWindowManager : IDisposable
         {
             if (ProcessHelper.IsShuttingDown())
                 return;
-            if (!(sender is ViewerWindow w) || w.Pinned)
+            if (sender is not ViewerWindow w || w.Pinned)
                 return; // Pinned window has already been forgotten
             StopFocusMonitor();
             InitNewViewerWindow();
@@ -206,6 +241,6 @@ internal class ViewWindowManager : IDisposable
 
     internal static ViewWindowManager GetInstance()
     {
-        return _instance ?? (_instance = new ViewWindowManager());
+        return _instance ??= new ViewWindowManager();
     }
 }

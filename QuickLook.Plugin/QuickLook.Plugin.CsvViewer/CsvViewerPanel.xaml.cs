@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -31,9 +31,6 @@ using UtfUnknown;
 
 namespace QuickLook.Plugin.CsvViewer;
 
-/// <summary>
-///     Interaction logic for CsvViewerPanel.xaml
-/// </summary>
 public partial class CsvViewerPanel : UserControl
 {
     public CsvViewerPanel()

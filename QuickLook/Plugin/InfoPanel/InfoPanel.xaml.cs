@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -25,9 +25,6 @@ using System.Windows.Controls;
 
 namespace QuickLook.Plugin.InfoPanel;
 
-/// <summary>
-///     Interaction logic for InfoPanel.xaml
-/// </summary>
 public partial class InfoPanel : UserControl
 {
     private bool _stop;
@@ -35,9 +32,6 @@ public partial class InfoPanel : UserControl
     public InfoPanel()
     {
         InitializeComponent();
-
-        // apply global theme
-        Resources.MergedDictionaries[0].Clear();
     }
 
     public bool Stop
@@ -48,7 +42,7 @@ public partial class InfoPanel : UserControl
 
     public void DisplayInfo(string path)
     {
-        Task.Run(() =>
+        _ = Task.Run(() =>
         {
             var scale = DisplayDeviceHelper.GetCurrentScaleFactor();
 
@@ -73,7 +67,7 @@ public partial class InfoPanel : UserControl
 
         Stop = false;
 
-        Task.Run(() =>
+        _ = Task.Run(() =>
         {
             if (File.Exists(path))
             {
@@ -83,10 +77,7 @@ public partial class InfoPanel : UserControl
             }
             else if (Path.GetPathRoot(path) == path) // is this a drive?
             {
-                long totalSpace;
-                long totalFreeSpace;
-
-                FileHelper.GetDriveSpace(path, out totalSpace, out totalFreeSpace);
+                FileHelper.GetDriveSpace(path, out var totalSpace, out var totalFreeSpace);
 
                 Dispatcher.Invoke(() =>
                 {

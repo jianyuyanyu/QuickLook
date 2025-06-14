@@ -19,16 +19,17 @@ if(-not (Test-Path env:CI))
     Copy-Item -Recurse ..\Build\Package ..\Build\Appx\Package
     Copy-Item -Recurse ..\Build\Assets ..\Build\Appx\Assets
     Copy-item ..\Build\AppxManifest.xml ..\Build\Appx\AppxManifest.xml
+    Remove-Item -Recurse ..\Build\Appx\Package\QuickLook.WoW64HookHelper.exe -ErrorAction SilentlyContinue
 
     # set version to git version
     Update-Version("..\Build\Appx\AppxManifest.xml")
 
     # generate resources
-    $priExe = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\makepri.exe'
+    $priExe = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x86\makepri.exe'
     .$priExe new /pr ..\Build\Appx /cf ..\Build\priconfig.xml /of ..\Build\Appx\resources.pri
     
     # packing
-    $packExe = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\makeappx.exe'
+    $packExe = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x86\makeappx.exe'
     $folder = '..\Build\Appx\'
 
     .$packExe pack /l /o /d ..\Build\Appx /p ..\Build\QuickLook-$version.appx

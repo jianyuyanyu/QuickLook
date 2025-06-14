@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 Paddy Xu
+﻿// Copyright © 2017-2025 QL-Win Contributors
 //
 // This file is part of QuickLook program.
 //
@@ -19,6 +19,7 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Media.Imaging;
 
 namespace QuickLook.Plugin.VideoViewer;
 
@@ -48,20 +49,37 @@ public sealed class TimeTickToShortStringConverter : DependencyObject, IValueCon
 
 public sealed class VolumeToIconConverter : DependencyObject, IValueConverter
 {
-    private static readonly string[] Volumes = { "\xE74F", "\xE993", "\xE994", "\xE995" };
+    private static readonly string[] Volumes = ["\xE74F", "\xE993", "\xE994", "\xE995"];
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value == null)
-            return Volumes[0];
+        if (value is double v)
+        {
+            // Clump to range [0, 1]
+            v = Math.Max(0d, Math.Min(v, 1d));
 
-        var v = (double)value;
-        if (Math.Abs(v) < 0.01)
-            return Volumes[0];
+            if (v < 0.01d) return Volumes[0];
 
-        v = Math.Min(v, 1);
+            return Volumes[1 + (int)(v / 0.34d)];
+        }
 
-        return Volumes[1 + (int)(v / 0.34)];
+        return Volumes[0];
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public sealed class CoverArtConverter : IValueConverter
+{
+    private static readonly BitmapImage emptyImage =
+        new(new Uri("pack://application:,,,/QuickLook.Plugin.VideoViewer;component/Resources/empty.png", UriKind.Absolute));
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value ?? emptyImage;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
